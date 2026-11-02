@@ -54,7 +54,7 @@ def _check_db(label: str, dsn: str, expected_role: str) -> None:
                     """
                     select current_user,
                            coalesce((select rolsuper from pg_roles where rolname = current_user), false),
-                           pg_has_role(current_user, %s, 'member')
+                           pg_has_role(current_user, %s::text, 'member')
                     """,
                     (expected_role,),
                 )
