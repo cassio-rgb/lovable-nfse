@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PY_LOCAL = ["tests.test_guards", "tests.test_domain", "tests.test_imports", "tests.test_isolation", "tests.test_emissions",
             "tests.test_contract", "tests.test_interop", "tests.test_preflight", "tests.test_certificado", "tests.test_escritorio",
-            "tests.test_api", "tests.test_auth", "tests.test_catalogos"]
+            "tests.test_api", "tests.test_auth", "tests.test_storage", "tests.test_catalogos"]
 results: list[tuple[str, str]] = []
 
 
