@@ -13,6 +13,18 @@ jobs:
         with:
           python-version: "3.12"
       - uses: oven-sh/setup-bun@v2
-      - run: pip install openpyxl fastapi httpx python-multipart "PyJWT[crypto]>=2.10,<3" "cryptography>=50,<51" && bun install
+      - run: sudo apt-get update && sudo apt-get install -y xmlsec1
+      - run: pip install openpyxl fastapi httpx python-multipart "psycopg[binary]>=3.2" "lxml>=6.0,<6.2" "PyJWT[crypto]>=2.10,<3" "cryptography>=50,<51" playwright
+      - run: python -m playwright install --with-deps chromium
+      - run: bun install
+      - name: Start preview for E2E
+        run: |
+          bun run dev -- --host 127.0.0.1 --port 8080 > /tmp/nfse-vite.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8080/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/nfse-vite.log
+          exit 1
       - run: python scripts/verify.py --mode local
       # Nunca transmite documentos oficiais em PR.
