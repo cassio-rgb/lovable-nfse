@@ -161,3 +161,28 @@ Regras:
 - `NFSE_PRODUCTION_ENABLED=false` continua impedindo produção;
 - o adaptador fiscal oficial permanece bloqueado;
 - o cofre e o certificado continuam obrigatórios antes de qualquer transmissão real.
+
+
+## Delta de File Manifest — Bootstrap seguro da API em homologação
+
+Decisão operacional aprovada ao prosseguir com a aplicação em homologação.
+
+Objetivo: permitir que a API FastAPI suba com Supabase Auth, PostgreSQL e Storage duráveis já validados, sem exigir o cofre do certificado no processo da API.
+
+Racional de segurança:
+- a API não transmite NFS-e diretamente;
+- a confirmação de emissão persiste o snapshot e cria um job;
+- a transmissão externa existe somente no worker;
+- o adaptador fiscal do worker permanece fail-closed;
+- produção continua desabilitada.
+
+Arquivos afetados:
+- `backend/app/main.py`: montar `Deps` reais e retornar `create_app(...)` em homologação.
+- `backend/tests/test_main_bootstrap.py`: validar bootstrap com dependências duráveis simuladas, sem rede e sem transmissão.
+
+Restrições:
+- nenhuma implementação de cofre nesta etapa;
+- nenhum PFX ou senha em runtime da API;
+- nenhum desbloqueio de `NationalNfseClient.submit/lookup`;
+- `NFSE_PRODUCTION_ENABLED=false` permanece obrigatório;
+- worker fiscal não é iniciado por este bootstrap.
