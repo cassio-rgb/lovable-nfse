@@ -20,6 +20,11 @@ FULL = {
     "IDENTITY_ISSUER": f"https://user:{SEGREDO}@idp.example", "IDENTITY_AUDIENCE": "nfse",
     "DATABASE_URL": f"postgresql://nfse_api:{SEGREDO}@db.example/nfse",
     "WORKER_DATABASE_URL": f"postgresql://w:{SEGREDO}@db.example/nfse",
+    "STORAGE_S3_ENDPOINT": "https://storage.example.test/storage/v1/s3",
+    "STORAGE_S3_REGION": "us-test-1",
+    "STORAGE_S3_ACCESS_KEY_ID": "fake-access",
+    "STORAGE_S3_SECRET_ACCESS_KEY": SEGREDO,
+    "STORAGE_CONTAINER": "nfse-documentos",
     "CERTIFICATE_REFERENCE": f"vault://{SEGREDO}", "CORS_ORIGINS": "https://app.example",
 }
 
@@ -40,8 +45,8 @@ class Preflight(unittest.TestCase):
         st = {i["item"]: i["status"] for i in d["itens"]}
         self.assertEqual(st["DATABASE_URL"], "presente_nao_validado")  # presença ≠ validação
         self.assertEqual(st["verificador_identidade"], "presente_nao_validado")
-        for k in ("storage_privado_duravel", "cofre_certificados"):
-            self.assertEqual(st[k], "ausente")
+        self.assertEqual(st["storage_privado_duravel"], "presente_nao_validado")
+        self.assertEqual(st["cofre_certificados"], "ausente")
         self.assertEqual(st["adaptador_http_oficial"], "bloqueado")
         self.assertEqual(st["perfil_cripto_aprovado"], "bloqueado")
 
