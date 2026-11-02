@@ -46,6 +46,17 @@ def _require_env() -> dict[str, str]:
     return {name: os.environ[name] for name in ROOT_REQUIRED}
 
 
+def _db_error(label: str, exc: Exception) -> SmokeError:
+    sqlstate = getattr(exc, "sqlstate", None)
+    diag = getattr(exc, "diag", None)
+    primary = getattr(diag, "message_primary", None) if diag else None
+    detail = primary or str(exc).splitlines()[0]
+    if len(detail) > 220:
+        detail = detail[:217] + "..."
+    suffix = f" SQLSTATE={sqlstate}" if sqlstate else ""
+    return SmokeError(f"{label}: falha PostgreSQL ({type(exc).__name__}{suffix}) — {detail}")
+
+
 def _check_db(label: str, dsn: str, expected_role: str) -> None:
     try:
         with psycopg.connect(dsn, connect_timeout=10) as conn:
@@ -53,20 +64,28 @@ def _check_db(label: str, dsn: str, expected_role: str) -> None:
                 cur.execute(
                     """
                     select current_user,
-                           coalesce((select rolsuper from pg_roles where rolname = current_user), false),
-                           pg_has_role(current_user, %s::text, 'member')
-                    """,
-                    (expected_role,),
+                           coalesce(
+                               (select rolsuper from pg_roles where rolname = current_user),
+                               false
+                           )
+                    """
                 )
-                user, is_super, has_expected_role = cur.fetchone()
+                user, is_super = cur.fetchone()
+                cur.execute("select pg_has_role(%s::name, 'MEMBER')", (expected_role,))
+                has_expected_role = bool(cur.fetchone()[0])
     except Exception as exc:
-        raise SmokeError(f"{label}: falha de conexão/consulta ({type(exc).__name__})") from exc
+        raise _db_error(label, exc) from exc
 
     if is_super:
         raise SmokeError(f"{label}: conexão recusada — usuário é superusuário")
     if not has_expected_role:
-        raise SmokeError(f"{label}: conexão recusada — usuário não herda {expected_role}")
-    print(f"[OK] {label}: conectado como papel não-superusuário com herança {expected_role}")
+        raise SmokeError(
+            f"{label}: conectado como {user}, mas não herda o papel esperado {expected_role}"
+        )
+    print(
+        f"[OK] {label}: conectado como {user}; não-superusuário; "
+        f"herança {expected_role} confirmada"
+    )
 
 
 def _check_jwks(issuer: str) -> None:
