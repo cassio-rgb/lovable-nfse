@@ -197,7 +197,7 @@ def create_app(d: Deps) -> FastAPI:
             if not cors:
                 return Response(status_code=403)
             return Response(status_code=204, headers={**cors, "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
-                                                      "Access-Control-Allow-Headers": "Content-Type, Idempotency-Key, X-Requested-With",
+                                                      "Access-Control-Allow-Headers": "Authorization, Content-Type, Idempotency-Key, X-Requested-With",
                                                       "Access-Control-Max-Age": "600"})
         # CSRF: sessão em cookie exige origem permitida + cabeçalho customizado (força preflight).
         if request.method in MUTATING and (not cors or request.headers.get(CSRF_HEADER) != CSRF_VALUE):
@@ -251,6 +251,32 @@ def create_app(d: Deps) -> FastAPI:
         if not any(retorno == o or retorno.startswith(o + "/") for o in s.allowed_origins):
             raise err(400, "Retorno não permitido")
         return RedirectResponse(d.identity.login_url(retorno), status_code=302)  # type: ignore[union-attr]
+
+    @app.post("/v1/auth/session", status_code=204)
+    def criar_sessao(authorization: str | None = Header(None)):
+        if not authorization or not authorization.startswith("Bearer "):
+            raise err(401, "Token de autenticação ausente")
+        token = authorization.removeprefix("Bearer ").strip()
+        try:
+            d.identity.verify(token)  # type: ignore[union-attr]
+        except Exception:
+            raise err(401, "Token de autenticação inválido")
+        resp = Response(status_code=204)
+        resp.set_cookie(
+            SESSION_COOKIE,
+            token,
+            httponly=True,
+            secure=True,
+            samesite="none",
+            path="/",
+        )
+        return resp
+
+    @app.delete("/v1/auth/session", status_code=204)
+    def encerrar_sessao():
+        resp = Response(status_code=204)
+        resp.delete_cookie(SESSION_COOKIE, path="/", secure=True, httponly=True, samesite="none")
+        return resp
 
     @app.get("/v1/sessao")
     def sessao(request: Request):
