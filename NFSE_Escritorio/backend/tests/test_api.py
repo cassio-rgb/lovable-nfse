@@ -90,6 +90,37 @@ class Startup(unittest.TestCase):
 
 
 class Session(unittest.TestCase):
+    def test_token_exchange_sets_secure_http_only_cookie(self):
+        c, _ = build()
+        c.cookies.clear()
+        r = c.post(
+            "/v1/auth/session",
+            headers={**H, "Authorization": "Bearer tok-u1"},
+        )
+        self.assertEqual(r.status_code, 204)
+        cookie = r.headers.get("set-cookie", "")
+        self.assertIn("session=tok-u1", cookie)
+        self.assertIn("HttpOnly", cookie)
+        self.assertIn("Secure", cookie)
+        self.assertIn("SameSite=none", cookie)
+        self.assertEqual(c.get("/v1/sessao").status_code, 200)
+
+    def test_invalid_exchange_token_rejected(self):
+        c, _ = build()
+        c.cookies.clear()
+        r = c.post(
+            "/v1/auth/session",
+            headers={**H, "Authorization": "Bearer forjado"},
+        )
+        self.assertEqual(r.status_code, 401)
+
+    def test_logout_clears_cookie(self):
+        c, _ = build()
+        r = c.delete("/v1/auth/session", headers=H)
+        self.assertEqual(r.status_code, 204)
+        self.assertIn("session=", r.headers.get("set-cookie", ""))
+        self.assertEqual(c.get("/v1/sessao").status_code, 401)
+
     def test_sessao_lists_only_authorized(self):
         c, _ = build()
         j = c.get("/v1/sessao").json()
