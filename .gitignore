@@ -1,0 +1,37 @@
+﻿# Segredos e certificados
+*.pfx
+*.p12
+*.pem
+*.key
+.env
+.env.*
+**/Certificados/
+**/certificados/
+
+# Python
+**/.venv/
+**/.venv-*/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+
+# Node
+**/node_modules/
+**/dist/
+**/.output/
+**/.output-local/
+**/.vinxi/
+**/.nitro/
+
+# Estado local da aplicação
+**/.nfse-local/
+
+# Logs
+*.log
+logs/
+
+# Sistema / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

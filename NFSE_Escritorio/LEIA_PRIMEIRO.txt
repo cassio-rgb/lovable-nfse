@@ -1,0 +1,51 @@
+NFS-e Escritorio — teste local de demonstracao
+Codigo de origem: projeto Lovable ab6fb1ff-c777-428e-8b45-6712a008425d
+Commit: 2920cd4219b76b9bbfbc7bf8c291bcf5e317fa06
+Preparado em 02/11/2026.
+
+ESTADO
+Este pacote contem o codigo para construir e abrir a DEMONSTRACAO.
+Nao e um instalador .exe. Nao emite notas fiscais.
+Somente o computador principal acessa a demonstracao (127.0.0.1).
+Acesso pela rede e emissao real continuam bloqueados.
+Os comandos ainda precisam ser validados no Windows do escritorio.
+
+COMO COMECAR NO WINDOWS
+1. Extraia o ZIP completamente antes de executar qualquer comando.
+2. Abra a pasta NFSE_Escritorio, que contem package.json e a pasta scripts.
+3. Na barra de endereco do Explorador de Arquivos, digite powershell e pressione Enter.
+4. Instale as dependencias usando o Bun cujo funcionamento voce ja confirmou:
+
+& "$env:USERPROFILE\.bun\bin\bun.exe" install --frozen-lockfile
+
+5. Se concluir sem erro, execute UM comando por vez:
+
+.\scripts\escritorio.cmd verificar
+.\scripts\escritorio.cmd construir
+.\scripts\escritorio.cmd iniciar --abrir
+
+O primeiro verificar pode mostrar que o build local ainda nao existe.
+O construir gera esse build. Se algum comando apresentar erro, pare e registre a mensagem.
+
+Para conferir se esta rodando:
+.\scripts\escritorio.cmd estado
+
+Para parar:
+.\scripts\escritorio.cmd parar
+
+Nao use construir --modo api agora: os requisitos fiscais ainda nao estao configurados.
+
+REQUISITOS
+Node.js 22.12 ou superior, Python 3.12 ou superior, Bun e internet para baixar dependencias.
+O print do usuario confirmou Node 24.16.0, Python 3.14.2 e Bun 1.4.4.
+As versoes foram identificadas; a compatibilidade integral do projeto no Windows ainda nao foi comprovada.
+
+CERTIFICADO
+Nao copie o A1 nem a senha para esta pasta ou para o chat. A demonstracao nao precisa deles.
+
+DETALHES
+Consulte docs/instalacao-escritorio-windows.md.
+O favicon.ico opcional nao foi exportado; isso pode gerar apenas a falta do icone da aba.
+O XLSX oficial de testes foi restaurado dos bytes oficiais com SHA-256 conferido.
+Os esquemas XSD foram conferidos contra seu manifest.
+

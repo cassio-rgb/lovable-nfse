@@ -1,0 +1,66 @@
+ATUALIZAÇÃO LOCAL — TABELAS FISCAIS NFS-e
+
+Esta atualização é destinada à pasta existente:
+C:\Projetos\Lovable NFSe\NFSE_Escritorio
+Base do código: pacote 2920cd4 que já está instalado no escritório.
+
+1. Pare a aplicação. No PowerShell:
+cd "C:\Projetos\Lovable NFSe\NFSE_Escritorio"
+.\scripts\escritorio.cmd parar
+
+2. Faça uma cópia da pasta NFSE_Escritorio e renomeie a cópia como
+NFSE_Escritorio_antes_tabelas. Não apague a pasta original.
+
+3. Extraia ESTE ZIP para:
+C:\Projetos\Lovable NFSe
+
+O ZIP contém a pasta NFSE_Escritorio com os arquivos alterados e novos.
+Escolha SUBSTITUIR os arquivos de mesmo nome quando o Windows perguntar.
+Não extraia dentro da pasta NFSE_Escritorio, para não criar uma pasta duplicada.
+Não apague as outras pastas ou arquivos. O pacote não inclui node_modules,
+certificados, credenciais nem configurações reais de ambiente.
+
+4. No PowerShell, na pasta da aplicação:
+.\scripts\escritorio.cmd construir
+
+Somente se terminar com sucesso:
+.\scripts\escritorio.cmd iniciar --abrir
+
+Não é preciso instalar novamente as dependências: package.json e bun.lock
+foram preservados. Não é preciso instalar openpyxl para usar a demonstração.
+Esse módulo é necessário apenas para regenerar tabelas a partir dos XLSX.
+
+5. No mesmo navegador de antes, abra http://127.0.0.1:4517
+Não limpe os dados do navegador; os rascunhos de demonstração ficam nele.
+Em Nova NFS-e, preencha o tomador e clique Continuar.
+Na seção Códigos fiscais, pesquise por código ou descrição e SELECIONE
+cada opção na lista. Digitar na busca não escolhe um código.
+Preencha serviço nacional, NBS, CST IBS/CBS, cClassTrib e indicador da operação.
+Alterar CST limpa o cClassTrib para nova escolha. Nenhum código é escolhido
+pela empresa, CNAE, descrição da nota ou tipo de operação.
+Os códigos dependem da revisão fiscal do escritório.
+
+É permitido salvar incompleto. Para revisar, os códigos devem ser preenchidos,
+compatíveis com as tabelas e aplicáveis à NFS-e. Confira códigos e descrições
+na revisão final. Rascunhos antigos continuam salvos, mas exigem completar
+os códigos antes de revisar. Alterações invalidam a revisão anterior.
+
+As correlações do Anexo VIII são preliminares e somente para consulta.
+Não são regras de negócio obrigatórias nem determinam o enquadramento.
+A versão publicada de uma tabela não prova vigência no ambiente nacional.
+
+STATUS: demonstração local, sem emissão fiscal. A sincronização do código
+com o editor Lovable está pendente por erro da integração. Este ZIP contém
+as alterações locais testadas. O preview Lovable não contém esta atualização.
+Relatório: NFSE_Escritorio\sdd\BUILD_REPORT_TABELAS_FISCAIS.md
+Manifesto: NFSE_Escritorio\ATUALIZACAO_TABELAS_MANIFEST.json
+
+Testes: 23 frontend aprovados; 129 backend aprovados e 11 ignorados
+por dependências externas. Typecheck, lint dos novos arquivos e build local
+aprovados. Navegador visual e instalação Windows deste incremento ainda
+precisam da conferência do usuário; testes DOM não substituem essa revisão.
+
+Se a construção falhar, não execute iniciar. Envie a mensagem de erro.
+Para voltar à versão anterior: pare o servidor, restaure a pasta copiada
+antes da atualização e rode construir; depois iniciar --abrir.
+Manter o mesmo navegador e a mesma URL preserva os dados de demonstração.

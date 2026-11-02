@@ -1,0 +1,12 @@
+# Ambiente local isolado. Não executado neste build (sem Docker no ambiente Lovable).
+services:
+  db:
+    image: postgres:16
+    environment: { POSTGRES_PASSWORD: local-only, POSTGRES_DB: nfse }
+    volumes: ["../backend/db:/docker-entrypoint-initdb.d:ro"]
+  api:
+    build: { context: .., dockerfile: deploy/backend.Dockerfile }
+    env_file: ../config/env.example
+    environment: { DATABASE_URL: "postgresql://postgres:local-only@db/nfse" }
+    depends_on: [db]
+    ports: ["8000:8000"]
