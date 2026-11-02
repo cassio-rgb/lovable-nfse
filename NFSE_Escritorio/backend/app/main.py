@@ -15,7 +15,10 @@ def create_production_app():
     settings = config.load()
     from .pg import PgCompanies, PgMemberships, PgReleases, PostgresRepository
 
-    identity = SupabaseIdentityVerifier(settings.identity_issuer, settings.identity_audience)
+    try:
+        identity = SupabaseIdentityVerifier(settings.identity_issuer, settings.identity_audience)
+    except ValueError as exc:
+        raise ConfigError("Configuração de identidade inválida") from exc
     PostgresRepository(settings.database_url), PgMemberships(settings.database_url)
     PgCompanies(settings.database_url), PgReleases(settings.database_url)
     _ = identity  # identidade real conectada; demais adaptadores ainda bloqueiam o bootstrap
