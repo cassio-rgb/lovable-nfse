@@ -1,24 +1,27 @@
 """Ponto de entrada de produção/homologação (`uvicorn app.main:app`).
 
-Persistência durável existe (`app/pg.py`: PostgresRepository, PgMemberships, PgCompanies,
-PgReleases). Ainda NÃO existem: provedor de identidade real (verificador de sessão e
-emissão do cookie), storage privado durável e cofre de certificados. A inicialização,
-portanto, falha de forma explícita — nunca cai para dependências em memória.
+Persistência durável e verificação de identidade Supabase existem. Storage privado
+durável e cofre de certificados ainda não estão conectados. A inicialização falha
+de forma explícita enquanto essas dependências faltarem; nunca cai para memória.
 """
 from __future__ import annotations
 
 from . import config
+from .auth import SupabaseIdentityVerifier
 from .config import ConfigError
 
 
 def create_production_app():
-    settings = config.load()  # valida variáveis obrigatórias (inclui DATABASE_URL)
+    settings = config.load()
     from .pg import PgCompanies, PgMemberships, PgReleases, PostgresRepository
 
+    identity = SupabaseIdentityVerifier(settings.identity_issuer, settings.identity_audience)
     PostgresRepository(settings.database_url), PgMemberships(settings.database_url)
     PgCompanies(settings.database_url), PgReleases(settings.database_url)
+    _ = identity  # identidade real conectada; demais adaptadores ainda bloqueiam o bootstrap
+
     raise ConfigError(
-        "Infraestrutura incompleta: provedor de identidade, storage privado e cofre não estão conectados. "
+        "Infraestrutura incompleta: storage privado e cofre de certificados ainda não estão conectados. "
         f"A API não inicia (APP_ENV={settings.app_env})."
     )
 
