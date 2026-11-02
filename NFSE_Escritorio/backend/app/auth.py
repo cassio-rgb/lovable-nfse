@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from urllib.parse import quote, urlsplit, urlunsplit
+
+import jwt
+from jwt import PyJWKClient
 
 
 class AcessoNegado(Exception):
@@ -36,6 +40,50 @@ class MembershipStore:
     def require(self, p: Principal, empresa_id: str, perm: str) -> None:
         if perm not in self._m.get((p.user_id, empresa_id), set()):
             raise AcessoNegado()
+
+
+class SupabaseIdentityVerifier:
+    """Valida access tokens do Supabase Auth via JWKS público.
+
+    Somente app_metadata controlado pelo servidor pode elevar o papel para
+    escritorio. user_metadata nunca participa de autorização.
+    """
+
+    def __init__(self, issuer: str, audience: str, jwks_client: PyJWKClient | None = None) -> None:
+        issuer = issuer.rstrip("/")
+        if not issuer.startswith("https://") or not audience:
+            raise ValueError("Configuração de identidade inválida")
+        self.issuer = issuer
+        self.audience = audience
+        self.jwks_url = f"{issuer}/.well-known/jwks.json"
+        self._jwks = jwks_client or PyJWKClient(self.jwks_url)
+
+    def verify(self, token: str) -> dict:
+        if not token or token.count(".") != 2:
+            raise ValueError("Token inválido")
+        signing_key = self._jwks.get_signing_key_from_jwt(token).key
+        claims = jwt.decode(
+            token,
+            signing_key,
+            algorithms=["RS256", "ES256"],
+            audience=self.audience,
+            issuer=self.issuer,
+            options={"require": ["exp", "iss", "sub", "aud"]},
+        )
+        if claims.get("role") != "authenticated" or claims.get("is_anonymous") is True:
+            raise ValueError("Sessão não autenticada")
+
+        app_metadata = claims.get("app_metadata")
+        papel = app_metadata.get("papel") if isinstance(app_metadata, dict) else None
+        if papel not in {"cliente", "escritorio"}:
+            papel = "cliente"
+        return {**claims, "papel": papel}
+
+    def login_url(self, retorno: str) -> str:
+        """Leva para a tela de login do próprio frontend, que usa Supabase Auth."""
+        p = urlsplit(retorno)
+        origin = urlunsplit((p.scheme, p.netloc, "", "", ""))
+        return f"{origin}/login?retorno={quote(retorno, safe='')}"
 
 
 def principal_from_claims(claims: dict) -> Principal:
