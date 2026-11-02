@@ -1,25 +1,27 @@
-"""Ponto de entrada de produção/homologação (`uvicorn app.main:app`).
+"""Ponto de entrada da API fiscal em homologação/produção.
 
-Persistência durável e verificação de identidade Supabase existem. Storage privado
-durável e cofre de certificados ainda não estão conectados. A inicialização falha
-de forma explícita enquanto essas dependências faltarem; nunca cai para memória.
+A API usa apenas dependências duráveis (PostgreSQL, Supabase Auth e Storage).
+O processo da API não carrega certificado nem adaptador fiscal; transmissão externa
+permanece responsabilidade exclusiva do worker e continua fail-closed.
 """
 from __future__ import annotations
 
 from . import config
+from .api import ApiSettings, Deps, create_app
 from .auth import SupabaseIdentityVerifier
 from .config import ConfigError
 from .documents import SupabaseS3Storage
+from .pg import PgCompanies, PgMemberships, PgReleases, PostgresRepository
 
 
 def create_production_app():
     settings = config.load()
-    from .pg import PgCompanies, PgMemberships, PgReleases, PostgresRepository
 
     try:
         identity = SupabaseIdentityVerifier(settings.identity_issuer, settings.identity_audience)
     except ValueError as exc:
         raise ConfigError("Configuração de identidade inválida") from exc
+
     storage = SupabaseS3Storage(
         settings.storage_s3_endpoint,
         settings.storage_s3_region,
@@ -27,14 +29,23 @@ def create_production_app():
         settings.storage_s3_secret_access_key,
         settings.storage_container,
     )
-    PostgresRepository(settings.database_url), PgMemberships(settings.database_url)
-    PgCompanies(settings.database_url), PgReleases(settings.database_url)
-    _ = identity, storage  # identidade e storage reais conectados; cofre ainda bloqueia o bootstrap
 
-    raise ConfigError(
-        "Infraestrutura incompleta: cofre de certificados ainda não está conectado. "
-        f"A API não inicia (APP_ENV={settings.app_env})."
+    deps = Deps(
+        settings=ApiSettings(
+            app_env=settings.app_env,
+            allowed_origins=settings.cors_origins,
+            production_enabled=settings.nfse_production_enabled,
+            import_max_bytes=settings.import_max_bytes,
+            import_max_rows=settings.import_max_rows,
+        ),
+        repo=PostgresRepository(settings.database_url),
+        members=PgMemberships(settings.database_url),
+        companies=PgCompanies(settings.database_url),
+        releases=PgReleases(settings.database_url),
+        storage=storage,
+        identity=identity,
     )
+    return create_app(deps)
 
 
 app = create_production_app()
