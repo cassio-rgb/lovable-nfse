@@ -20,6 +20,12 @@ async def main():
     await pg.get_by_role("button",name="Continuar").click()
     await pg.select_option("#op","locacao");await pg.fill("#comp","2026-11")
     await pg.get_by_role("button",name="Continuar").click()
+    # Códigos fiscais exigem escolha humana explícita; o E2E seleciona fixtures válidas.
+    await pg.get_by_role("combobox", name="Serviço nacional").select_option("010101")
+    await pg.get_by_role("combobox", name="NBS").select_option("1.0101.11.00")
+    await pg.get_by_role("combobox", name="CST IBS/CBS").select_option("000")
+    await pg.get_by_role("combobox", name="cClassTrib").select_option("000001")
+    await pg.get_by_role("combobox", name="Indicador da operação").select_option("010101")
     await pg.fill("#valor","1.250,00");await pg.fill("#desc","Taxa de administração de locação")
     await pg.screenshot(path=str(S/"2form.png"))
     await pg.get_by_role("button",name="Salvar e revisar").click();await pg.wait_for_timeout(1500)
