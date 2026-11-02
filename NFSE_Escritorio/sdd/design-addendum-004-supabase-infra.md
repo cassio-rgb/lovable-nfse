@@ -123,3 +123,21 @@ Restrições:
 - nenhuma chamada à API Nacional é habilitada;
 - certificado A1 e cofre permanecem fora desta etapa;
 - `NFSE_ENVIRONMENT=producao_restrita` e `NFSE_PRODUCTION_ENABLED=false` permanecem obrigatórios para homologação.
+
+
+## Delta de File Manifest — Empacotamento do Backend
+
+Decisão operacional aprovada ao prosseguir com a inicialização do backend em homologação.
+
+Objetivo: permitir a instalação editável do backend e suas dependências de teste sem alterar o bloqueio fiscal.
+
+Arquivo afetado:
+
+- `backend/pyproject.toml`: explicitar descoberta de pacotes Python somente para `app*`, excluindo `db*` e `tests*` da distribuição.
+
+Restrições:
+- nenhuma mudança no runtime fiscal;
+- nenhum segredo no pacote;
+- nenhum desbloqueio do adaptador HTTP;
+- nenhuma mudança no cofre/certificado;
+- nenhuma transmissão de NFS-e.
