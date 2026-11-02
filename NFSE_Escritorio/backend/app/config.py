@@ -18,6 +18,7 @@ class Settings:
     identity_issuer: str
     identity_audience: str
     database_url: str
+    worker_database_url: str
     storage_s3_endpoint: str
     storage_s3_region: str
     storage_s3_access_key_id: str
@@ -32,7 +33,7 @@ class Settings:
 
 def load(env: dict[str, str] | None = None) -> Settings:
     e = env if env is not None else dict(os.environ)
-    required = ["APP_ENV", "NFSE_ENVIRONMENT", "IDENTITY_ISSUER", "IDENTITY_AUDIENCE", "DATABASE_URL",
+    required = ["APP_ENV", "NFSE_ENVIRONMENT", "IDENTITY_ISSUER", "IDENTITY_AUDIENCE", "DATABASE_URL", "WORKER_DATABASE_URL",
                 "STORAGE_S3_ENDPOINT", "STORAGE_S3_REGION", "STORAGE_S3_ACCESS_KEY_ID",
                 "STORAGE_S3_SECRET_ACCESS_KEY", "STORAGE_CONTAINER"]
     missing = [k for k in required if not e.get(k)]
@@ -52,6 +53,7 @@ def load(env: dict[str, str] | None = None) -> Settings:
         identity_issuer=e["IDENTITY_ISSUER"],
         identity_audience=e["IDENTITY_AUDIENCE"],
         database_url=e["DATABASE_URL"],
+        worker_database_url=e["WORKER_DATABASE_URL"],
         storage_s3_endpoint=e["STORAGE_S3_ENDPOINT"],
         storage_s3_region=e["STORAGE_S3_REGION"],
         storage_s3_access_key_id=e["STORAGE_S3_ACCESS_KEY_ID"],
