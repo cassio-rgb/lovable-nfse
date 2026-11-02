@@ -100,3 +100,26 @@ Arquivos afetados/adicionados:
 
 As credenciais S3 não entram no GitHub, no frontend ou no banco. O bucket continua privado e sem política pública.
 
+
+
+## Delta de File Manifest — Runtime segregado do Worker
+
+Decisão aprovada pelo usuário em 2026-11-02 após validação real das duas conexões PostgreSQL no smoke de infraestrutura.
+
+Objetivo: tornar efetiva em runtime a segregação já definida entre API e Worker, sem habilitar transmissão fiscal.
+
+Arquivos afetados/adicionados:
+
+- `backend/app/config.py`: adicionar `worker_database_url` ao `Settings` e exigir `WORKER_DATABASE_URL`.
+- `backend/app/worker.py`: adicionar bootstrap explícito do repositório do worker usando somente `WORKER_DATABASE_URL`; manter o adaptador fiscal bloqueado.
+- `backend/tests/test_runtime_config.py`: validar que API e Worker recebem DSNs distintos e que o bootstrap do worker usa exclusivamente o DSN do worker.
+- `config/env.example`: manter a documentação dos dois DSNs separados; sem segredos.
+- `scripts/preflight.py`: manter a verificação de presença de `WORKER_DATABASE_URL`; nenhuma alteração de semântica necessária nesta etapa.
+
+Restrições:
+- o Worker não pode reutilizar `DATABASE_URL`;
+- nenhum fallback entre os dois DSNs;
+- nenhum segredo entra no repositório;
+- nenhuma chamada à API Nacional é habilitada;
+- certificado A1 e cofre permanecem fora desta etapa;
+- `NFSE_ENVIRONMENT=producao_restrita` e `NFSE_PRODUCTION_ENABLED=false` permanecem obrigatórios para homologação.
