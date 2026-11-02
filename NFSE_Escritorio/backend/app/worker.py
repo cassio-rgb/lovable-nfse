@@ -10,11 +10,20 @@ from __future__ import annotations
 import time
 from dataclasses import replace
 
+from . import config
 from .domain.models import Estado, Outcome
 from .domain.transitions import transition
 from .observability import event
 from .ports import FiscalAdapter
 from .repository import Job
+
+
+def create_worker_repository(settings=None):
+    """Cria o repositório durável do worker usando exclusivamente WORKER_DATABASE_URL."""
+    s = settings or config.load()
+    from .pg import PostgresRepository
+    return PostgresRepository(s.worker_database_url)
+
 
 OUTCOME_STATE = {
     Outcome.ACCEPTED: Estado.EMITIDA,
