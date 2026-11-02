@@ -39,7 +39,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install fastapi httpx python-multipart "PyJWT[crypto]>=2.10,<3" "cryptography>=50,<51"
+      - run: pip install fastapi httpx python-multipart "psycopg[binary]>=3.2" "PyJWT[crypto]>=2.10,<3" "cryptography>=50,<51"
       - name: Verify Supabase identity increment
         run: python -m unittest tests.test_auth tests.test_api tests.test_preflight -v
         working-directory: NFSE_Escritorio/backend
