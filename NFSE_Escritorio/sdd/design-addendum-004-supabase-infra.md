@@ -141,3 +141,23 @@ Restrições:
 - nenhum desbloqueio do adaptador HTTP;
 - nenhuma mudança no cofre/certificado;
 - nenhuma transmissão de NFS-e.
+
+
+## Delta de File Manifest — Bootstrap da API de Homologação
+
+Decisão operacional: permitir que a API FastAPI suba com Banco/Auth/Storage duráveis já validados, mantendo o worker fiscal e a transmissão separados e bloqueados.
+
+Arquivos afetados/adicionados:
+
+- `backend/app/main.py`: construir `Deps` reais com Supabase Auth, PostgreSQL e Supabase Storage e iniciar a API.
+- `backend/tests/test_main_bootstrap.py`: validar que o bootstrap usa dependências duráveis e não requer cofre para iniciar a API.
+- `config/env.example`: nenhuma alteração de segredo; configuração existente permanece.
+
+Regras:
+- subir a API não significa habilitar transmissão;
+- o worker fiscal não é iniciado por `app.main`;
+- nenhum certificado A1 é carregado;
+- nenhuma chamada à API Nacional ocorre no bootstrap;
+- `NFSE_PRODUCTION_ENABLED=false` continua impedindo produção;
+- o adaptador fiscal oficial permanece bloqueado;
+- o cofre e o certificado continuam obrigatórios antes de qualquer transmissão real.
