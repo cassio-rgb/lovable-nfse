@@ -8,6 +8,6 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - uses: oven-sh/setup-bun@v2
-      - run: pip install openpyxl fastapi httpx python-multipart && bun install
+      - run: pip install openpyxl fastapi httpx python-multipart "PyJWT[crypto]>=2.10,<3" "cryptography>=50,<51" && bun install
       - run: python scripts/verify.py --mode local
       # Nunca transmite documentos oficiais em PR.
