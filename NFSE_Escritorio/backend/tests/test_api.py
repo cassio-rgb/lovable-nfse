@@ -116,6 +116,12 @@ class Session(unittest.TestCase):
 
     def test_logout_clears_cookie(self):
         c, _ = build()
+        c.cookies.clear()
+        self.assertEqual(
+            c.post("/v1/auth/session", headers={**H, "Authorization": "Bearer tok-u1"}).status_code,
+            204,
+        )
+        self.assertEqual(c.get("/v1/sessao").status_code, 200)
         r = c.delete("/v1/auth/session", headers=H)
         self.assertEqual(r.status_code, 204)
         self.assertIn("session=", r.headers.get("set-cookie", ""))
