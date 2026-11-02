@@ -82,3 +82,21 @@ Este addendum apenas resolve fornecedores antes marcados como “a confirmar”.
 3. Cofre do certificado.
 4. Parâmetros fiscais duráveis.
 5. Contrato HTTP/assinatura e smoke restrito.
+
+## Delta de File Manifest — Storage Supabase
+
+A concretização do Storage usa o protocolo S3 compatível do Supabase, com credenciais próprias de Storage mantidas somente em runtime.
+
+Arquivos afetados/adicionados:
+
+- `backend/app/documents.py`: adicionar `SupabaseS3Storage` durável.
+- `backend/app/config.py`: adicionar endpoint, região, access key, secret key e bucket.
+- `backend/app/main.py`: conectar o adaptador Storage real sem remover o bloqueio do cofre.
+- `backend/pyproject.toml`: adicionar cliente S3 `boto3`.
+- `config/env.example`: documentar somente nomes/exemplos não sensíveis.
+- `scripts/preflight.py`: verificar presença da configuração e reconhecer o adaptador.
+- `backend/tests/test_storage.py`: novo teste unitário com cliente S3 falso; sem rede e sem segredo.
+- `.github/workflows/verify.yml`: job focado de Storage.
+
+As credenciais S3 não entram no GitHub, no frontend ou no banco. O bucket continua privado e sem política pública.
+
