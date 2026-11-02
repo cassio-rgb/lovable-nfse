@@ -77,13 +77,18 @@ def check_code() -> list[dict]:
         out.append({"grupo": "adaptadores", "item": nome, "status": status, "motivo": motivo})
 
     main = _read(APP / "main.py")
-    incompleto = "Infraestrutura incompleta" in main
-    for nome, marcador in (("verificador_identidade", "IdentityVerifier"), ("storage_privado_duravel", "Storage"),
-                           ("cofre_certificados", "Vault")):
+    auth = _read(APP / "auth.py")
+    identity_ok = "class SupabaseIdentityVerifier" in auth and "SupabaseIdentityVerifier(" in main
+    item("verificador_identidade", PRESENTE if identity_ok else AUSENTE,
+         "Supabase Auth/JWKS conectado; implementação não validada" if identity_ok else
+         "não implementado/conectado")
+
+    for nome, marcador in (("storage_privado_duravel", "Storage"), ("cofre_certificados", "Vault")):
         implementado = any(f"({marcador})" in _read(p) or f"({marcador}):" in _read(p)
                            for p in APP.rglob("*.py") if p.name != "ports.py")
-        st = AUSENTE if (incompleto or not implementado) else PRESENTE
-        item(nome, st, "não implementado/conectado; app.main recusa iniciar" if st == AUSENTE else "implementação encontrada; não validada")
+        st = PRESENTE if implementado and marcador in main else AUSENTE
+        item(nome, st, "implementação encontrada; não validada" if st == PRESENTE else
+             "não implementado/conectado; app.main recusa iniciar")
 
     item("parametros_fiscais_duraveis", AUSENTE if "FiscalParameters" not in "".join(
         _read(p) for p in APP.rglob("*.py") if p.name != "ports.py") else PRESENTE,
