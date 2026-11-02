@@ -39,7 +39,8 @@ class Preflight(unittest.TestCase):
         self.assertFalse(d["pronto"])
         st = {i["item"]: i["status"] for i in d["itens"]}
         self.assertEqual(st["DATABASE_URL"], "presente_nao_validado")  # presença ≠ validação
-        for k in ("verificador_identidade", "storage_privado_duravel", "cofre_certificados"):
+        self.assertEqual(st["verificador_identidade"], "presente_nao_validado")
+        for k in ("storage_privado_duravel", "cofre_certificados"):
             self.assertEqual(st[k], "ausente")
         self.assertEqual(st["adaptador_http_oficial"], "bloqueado")
         self.assertEqual(st["perfil_cripto_aprovado"], "bloqueado")
