@@ -46,7 +46,7 @@ def build(app_env="test"):
     m.grant("u2", "B", {"ler", "editar", "emitir"})
     rel.register(Release("A", "locacao", "producao_restrita", 1, "evidência de teste", "esc"))
     deps = Deps(ApiSettings(app_env, (ORIGIN,)), repo, m, c, rel, st, TestIdentity())
-    client = TestClient(create_app(deps))
+    client = TestClient(create_app(deps), base_url="https://testserver")
     client.cookies.set("session", "tok-u1")
     return client, deps
 
