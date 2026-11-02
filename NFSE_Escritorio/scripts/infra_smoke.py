@@ -121,7 +121,13 @@ def _s3_client(env: dict[str, str]):
         region_name=env["STORAGE_S3_REGION"],
         aws_access_key_id=env["STORAGE_S3_ACCESS_KEY_ID"],
         aws_secret_access_key=env["STORAGE_S3_SECRET_ACCESS_KEY"],
-        config=Config(signature_version="s3v4", s3={"addressing_style": "path"}),
+        config=Config(
+            signature_version="s3v4",
+            connect_timeout=10,
+            read_timeout=15,
+            retries={"max_attempts": 1, "mode": "standard"},
+            s3={"addressing_style": "path"},
+        ),
     )
 
 
@@ -142,8 +148,12 @@ def _check_storage(env: dict[str, str]) -> None:
             Metadata={"sha256": sha, "purpose": "infra-smoke"},
         )
         created = True
-        obj = client.get_object(Bucket=bucket, Key=key)
-        body = obj["Body"].read()
+        obj = client.get_object(
+            Bucket=bucket,
+            Key=key,
+            Range=f"bytes=0-{len(payload) - 1}",
+        )
+        body = obj["Body"].read(len(payload))
         meta = {str(k).lower(): str(v) for k, v in (obj.get("Metadata") or {}).items()}
         if body != payload:
             raise SmokeError("Storage: conteúdo lido difere do conteúdo gravado")
