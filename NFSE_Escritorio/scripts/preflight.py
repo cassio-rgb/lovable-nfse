@@ -61,6 +61,11 @@ def check_config(env: dict[str, str]) -> list[dict]:
                    ("IDENTITY_AUDIENCE", "audiência esperada nos tokens"),
                    ("DATABASE_URL", "papel nfse_api, nunca superusuário"),
                    ("WORKER_DATABASE_URL", "papel do worker separado do API"),
+                   ("STORAGE_S3_ENDPOINT", "endpoint S3 privado do Supabase Storage"),
+                   ("STORAGE_S3_REGION", "região do endpoint S3"),
+                   ("STORAGE_S3_ACCESS_KEY_ID", "identificador de acesso S3 do backend"),
+                   ("STORAGE_S3_SECRET_ACCESS_KEY", "segredo S3 do backend"),
+                   ("STORAGE_CONTAINER", "bucket privado de documentos"),
                    ("CERTIFICATE_REFERENCE", "referência no cofre, nunca o arquivo"),
                    ("CORS_ORIGINS", "origens permitidas do frontend")):
         item(k, PRESENTE if env.get(k) else AUSENTE, (why + "; presença não é validação") if env.get(k) else why)
