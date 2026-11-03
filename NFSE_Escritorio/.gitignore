@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+/node_modules_npm_backup/
 dist
 dist-ssr
 .output
@@ -37,3 +38,5 @@ __pycache__/
 .pytest_cache/
 .output-local
 .nfse-local
+
+supabase/.temp/
