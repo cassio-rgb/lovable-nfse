@@ -247,6 +247,9 @@ class PgMemberships:
 
     def _q(self, sql, args=(), fetch=True):
         with psycopg.connect(self.dsn, row_factory=dict_row) as c:
+            uid = current_user_id.get()
+            if uid:
+                c.execute("SELECT set_config('app.user_id', %s, true)", (uid,))
             cur = c.execute(sql, args)
             return cur.fetchall() if fetch else None
 
@@ -283,6 +286,9 @@ class PgCompanies:
         if not _uuid_ok(cid):
             return None
         with psycopg.connect(self.dsn, row_factory=dict_row) as conn:
+            uid = current_user_id.get()
+            if uid:
+                conn.execute("SELECT set_config('app.user_id', %s, true)", (uid,))
             r = conn.execute("SELECT * FROM company WHERE id=%s", (cid,)).fetchone()
         return Company(str(r["id"]), r["razao_social"], r["cnpj"], r["municipio"]) if r else None
 
@@ -302,6 +308,9 @@ class PgReleases:
 
     def _rows(self, where, args):
         with psycopg.connect(self.dsn, row_factory=dict_row) as conn:
+            uid = current_user_id.get()
+            if uid:
+                conn.execute("SELECT set_config('app.user_id', %s, true)", (uid,))
             return conn.execute("SELECT DISTINCT ON (company_id, operacao, ambiente) * FROM operation_release WHERE "
                                 + where + " AND valid_from <= now() AND (valid_to IS NULL OR valid_to > now()) "
                                 "ORDER BY company_id, operacao, ambiente, versao DESC", args).fetchall()

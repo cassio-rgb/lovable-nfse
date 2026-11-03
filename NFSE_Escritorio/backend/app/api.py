@@ -281,6 +281,7 @@ def create_app(d: Deps) -> FastAPI:
     @app.get("/v1/sessao")
     def sessao(request: Request):
         p = principal(request)
+        current_user_id.set(p.user_id)  # RLS no PostgreSQL
         ids = members.empresas(p.user_id)
         empresas = [c for c in (d.companies.get(i) for i in ids) if c]
         return {"usuario": p.user_id, "papel": p.papel,
