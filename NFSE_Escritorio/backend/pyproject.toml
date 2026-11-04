@@ -10,7 +10,9 @@ dependencies = [
   "openpyxl>=3.1",
   "python-multipart>=0.0.9",
   "lxml>=6.0,<6.2",     # verificado com 6.0.2 e 6.1.3 (libxml2 2.14.6); C14N de subárvore via cópia destacada
-  "cryptography>=50,<51",  # verificado com 50.0.2;   # XMLDSIG RSA (perfil criptográfico ainda não confirmado oficialmente)
+  "cryptography>=50,<51",  # verificado com 50.0.2; XMLDSIG RSA (perfil criptográfico ainda não confirmado oficialmente)
+  "PyJWT[crypto]>=2.10,<3",  # validação de JWT/JWKS do Supabase Auth
+  "boto3>=1.35,<2",  # Supabase Storage via endpoint S3 compatível
 ]
 
 [project.optional-dependencies]
@@ -18,3 +20,8 @@ test = ["pytest>=8", "httpx>=0.27"]  # + binário xmlsec1 1.3.x (verificação i
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["db*", "tests*"]

@@ -38,6 +38,8 @@ export function DraftForm({ inicial }: { inicial?: Rascunho }) {
   const [save, setSave] = useState<SaveState>("limpo");
   const [mostrarErros, setMostrarErros] = useState(false);
   const resumoRef = useRef<HTMLDivElement>(null);
+  const operacaoRef = useRef<HTMLSelectElement>(null);
+  const valorRef = useRef<HTMLInputElement>(null);
   const base = useRef(canonical(inicial?.dados ?? dadosVazios()));
   const bypass = useRef(false);
 
@@ -141,6 +143,15 @@ export function DraftForm({ inicial }: { inicial?: Rascunho }) {
     falha: "Falha ao salvar — dados preservados",
   };
   const pendList = Object.values(pend);
+  function continuar(ok: boolean, next: 2 | 3) {
+    if (!ok) {
+      setMostrarErros(true);
+      requestAnimationFrame(() => resumoRef.current?.focus());
+      return;
+    }
+    setPasso(next);
+    requestAnimationFrame(() => (next === 2 ? operacaoRef.current : valorRef.current)?.focus());
+  }
 
   return (
     <form
@@ -175,7 +186,7 @@ export function DraftForm({ inicial }: { inicial?: Rascunho }) {
             </Field>
           </div>
           {passo === 1 && (
-            <Button type="button" variant="secondary" onClick={() => (passo1Ok ? setPasso(2) : setMostrarErros(true))}>Continuar</Button>
+            <Button type="button" variant="secondary" onClick={() => continuar(passo1Ok, 2)}>Continuar</Button>
           )}
         </fieldset>
 
@@ -185,17 +196,17 @@ export function DraftForm({ inicial }: { inicial?: Rascunho }) {
             <h2 className="text-sm font-semibold"><span className="mr-2 text-primary">2</span>Operação</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field id="op" label="Tipo de operação" erro={err("operacao")}>
-                <select id="op" className="h-9 w-full rounded-md border border-input bg-card px-3 text-sm" value={dados.operacao} aria-invalid={!!err("operacao")}
+                <select ref={operacaoRef} id="op" className="h-9 w-full rounded-md border border-input bg-card px-3 text-sm" value={dados.operacao} aria-invalid={!!err("operacao")} aria-describedby={err("operacao") ? "op-erro" : undefined}
                   onChange={(e) => set({ operacao: e.target.value as TipoOperacao })}>
                   <option value="">Selecione…</option>
                   {(Object.keys(OPERACAO_LABEL) as TipoOperacao[]).map((k) => <option key={k} value={k}>{OPERACAO_LABEL[k]}</option>)}
                 </select>
               </Field>
               <Field id="comp" label="Competência" erro={err("competencia")}>
-                <Input id="comp" type="month" value={dados.competencia} aria-invalid={!!err("competencia")} onChange={(e) => set({ competencia: e.target.value })} />
+                <Input id="comp" type="month" value={dados.competencia} aria-invalid={!!err("competencia")} aria-describedby={err("competencia") ? "comp-erro" : undefined} onChange={(e) => set({ competencia: e.target.value })} />
               </Field>
               <Field id="imovel" label="Imóvel (opcional)" hint="Endereço ou código interno do imóvel">
-                <Input id="imovel" value={dados.imovel} onChange={(e) => set({ imovel: e.target.value })} />
+                <Input id="imovel" value={dados.imovel} aria-describedby="imovel-hint" onChange={(e) => set({ imovel: e.target.value })} />
               </Field>
             </div>
             {dados.operacao && !lib && (
@@ -205,7 +216,7 @@ export function DraftForm({ inicial }: { inicial?: Rascunho }) {
               </Notice>
             )}
             {passo === 2 && (
-              <Button type="button" variant="secondary" onClick={() => (passo2Ok ? setPasso(3) : setMostrarErros(true))}>Continuar</Button>
+              <Button type="button" variant="secondary" onClick={() => continuar(passo2Ok, 3)}>Continuar</Button>
             )}
           </fieldset>
         )}
@@ -217,7 +228,7 @@ export function DraftForm({ inicial }: { inicial?: Rascunho }) {
             <legend className="sr-only">Valor e descrição</legend>
             <h2 className="text-sm font-semibold"><span className="mr-2 text-primary">3</span>Valor e descrição</h2>
             <Field id="valor" label="Valor do serviço (R$)" erro={err("valor")} hint="Ex.: 1.250,00 — até duas casas decimais">
-              <Input id="valor" inputMode="decimal" className="doc max-w-48" value={valorTxt} aria-invalid={!!err("valor")}
+              <Input ref={valorRef} id="valor" inputMode="decimal" className="doc max-w-48" value={valorTxt} aria-invalid={!!err("valor")} aria-describedby={err("valor") ? "valor-erro" : "valor-hint"}
                 onChange={(e) => {
                   setValorTxt(e.target.value);
                   const m = parseMoney(e.target.value);
@@ -225,7 +236,7 @@ export function DraftForm({ inicial }: { inicial?: Rascunho }) {
                 }} />
             </Field>
             <Field id="desc" label="Descrição do serviço" erro={err("descricao")}>
-              <Textarea id="desc" rows={3} value={dados.descricao} aria-invalid={!!err("descricao")} onChange={(e) => set({ descricao: e.target.value })} />
+              <Textarea id="desc" rows={3} value={dados.descricao} aria-invalid={!!err("descricao")} aria-describedby={err("descricao") ? "desc-erro" : undefined} onChange={(e) => set({ descricao: e.target.value })} />
             </Field>
           </fieldset>
         )}

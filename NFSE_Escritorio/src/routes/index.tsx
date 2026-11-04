@@ -31,7 +31,7 @@ function Inicio() {
           <h1 className="text-2xl font-semibold">{empresa!.razaoSocial}</h1>
           <p className="mt-1 text-sm text-muted-foreground">Prepare, revise e acompanhe as NFS-e desta empresa.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline"><Link to="/importar"><Upload aria-hidden /> Importar planilha</Link></Button>
           <Button asChild><Link to="/nova"><FilePlus2 aria-hidden /> Nova NFS-e</Link></Button>
         </div>

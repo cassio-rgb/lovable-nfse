@@ -34,7 +34,7 @@ function Page() {
       <h1 className="text-2xl font-semibold">Histórico</h1>
       <div className="flex flex-wrap gap-3">
         <Input aria-label="Buscar por tomador ou CPF/CNPJ" placeholder="Tomador ou CPF/CNPJ" className="max-w-xs bg-card" value={busca} onChange={(e) => setBusca(e.target.value)} />
-        <select aria-label="Filtrar por situação" className="h-9 rounded-md border border-input bg-card px-3 text-sm" value={estado} onChange={(e) => setEstado(e.target.value as EstadoFiscal | "")}>
+        <select aria-label="Filtrar por situação" className="h-9 w-full min-w-0 max-w-full rounded-md border border-input bg-card px-3 text-sm sm:w-auto" value={estado} onChange={(e) => setEstado(e.target.value as EstadoFiscal | "")}>
           <option value="">Todas as situações</option>
           {(["na_fila", "transmitindo", "resultado_desconhecido", "emitida", "rejeitada", "erro_pre_envio"] as EstadoFiscal[]).map((s) => <option key={s} value={s}>{ESTADO_LABEL[s]}</option>)}
         </select>

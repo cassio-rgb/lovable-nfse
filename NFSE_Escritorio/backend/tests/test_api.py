@@ -13,7 +13,7 @@ from app.config import ConfigError
 from app.documents import MemoryStorage
 from app.domain.models import Outcome
 from app.eligibility import Release, ReleaseRegistry
-from app.repository import MemoryRepository
+from app.repository import MemoryRepository, current_user_id
 from tests.helpers import FakeAdapter, dados as dados_fixture
 
 ORIGIN = "https://app.exemplo.test"
@@ -46,7 +46,7 @@ def build(app_env="test"):
     m.grant("u2", "B", {"ler", "editar", "emitir"})
     rel.register(Release("A", "locacao", "producao_restrita", 1, "evidência de teste", "esc"))
     deps = Deps(ApiSettings(app_env, (ORIGIN,)), repo, m, c, rel, st, TestIdentity())
-    client = TestClient(create_app(deps))
+    client = TestClient(create_app(deps), base_url="https://testserver")
     client.cookies.set("session", "tok-u1")
     return client, deps
 
@@ -70,6 +70,39 @@ def emitir(client, d, key="emissao:A:chave-estavel-1", ambiente="producao_restri
                        headers={**H, "Idempotency-Key": key})
 
 
+class RlsAuthorization(unittest.TestCase):
+    def test_membership_receives_verified_identity_before_query(self):
+        client, deps = build()
+        original = deps.members.require
+
+        def require(principal, empresa, permission):
+            self.assertEqual(current_user_id.get(), principal.user_id)
+            return original(principal, empresa, permission)
+
+        deps.members.require = require
+        marker = current_user_id.set("caller-context")
+        try:
+            for token, company, status in [
+                ("tok-u1", "A", 200), ("tok-u1", "B", 404),
+                ("tok-u2", "B", 200), ("tok-u2", "A", 404),
+                ("tok-u1", "A", 200),
+            ]:
+                client.cookies.clear()
+                self.assertEqual(client.post("/v1/auth/session", headers={
+                    **H, "Authorization": f"Bearer {token}",
+                }).status_code, 204)
+                self.assertEqual(client.get(f"/v1/empresas/{company}/rascunhos").status_code, status)
+                self.assertEqual(current_user_id.get(), "caller-context")
+            deps.members.revoke("u1", "A")
+            self.assertEqual(client.get("/v1/empresas/A/rascunhos").status_code, 404)
+            self.assertEqual(client.delete("/v1/auth/session", headers=H).status_code, 204)
+            self.assertEqual(client.get("/v1/empresas/A/rascunhos").status_code, 401)
+            self.assertEqual(current_user_id.get(), "caller-context")
+        finally:
+            current_user_id.reset(marker)
+            client.close()
+
+
 class Startup(unittest.TestCase):
     def test_refuses_memory_outside_test(self):
         with self.assertRaises(ConfigError):
@@ -90,6 +123,43 @@ class Startup(unittest.TestCase):
 
 
 class Session(unittest.TestCase):
+    def test_token_exchange_sets_secure_http_only_cookie(self):
+        c, _ = build()
+        c.cookies.clear()
+        r = c.post(
+            "/v1/auth/session",
+            headers={**H, "Authorization": "Bearer tok-u1"},
+        )
+        self.assertEqual(r.status_code, 204)
+        cookie = r.headers.get("set-cookie", "")
+        self.assertIn("session=tok-u1", cookie)
+        self.assertIn("HttpOnly", cookie)
+        self.assertIn("Secure", cookie)
+        self.assertIn("SameSite=none", cookie)
+        self.assertEqual(c.get("/v1/sessao").status_code, 200)
+
+    def test_invalid_exchange_token_rejected(self):
+        c, _ = build()
+        c.cookies.clear()
+        r = c.post(
+            "/v1/auth/session",
+            headers={**H, "Authorization": "Bearer forjado"},
+        )
+        self.assertEqual(r.status_code, 401)
+
+    def test_logout_clears_cookie(self):
+        c, _ = build()
+        c.cookies.clear()
+        self.assertEqual(
+            c.post("/v1/auth/session", headers={**H, "Authorization": "Bearer tok-u1"}).status_code,
+            204,
+        )
+        self.assertEqual(c.get("/v1/sessao").status_code, 200)
+        r = c.delete("/v1/auth/session", headers=H)
+        self.assertEqual(r.status_code, 204)
+        self.assertIn("session=", r.headers.get("set-cookie", ""))
+        self.assertEqual(c.get("/v1/sessao").status_code, 401)
+
     def test_sessao_lists_only_authorized(self):
         c, _ = build()
         j = c.get("/v1/sessao").json()

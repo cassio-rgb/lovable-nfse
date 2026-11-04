@@ -29,5 +29,28 @@ Acesso a outra empresa: 404 genérico `Conteúdo indisponível`. Valores: string
 ## Estado da implementação
 Todas as rotas acima estão em `backend/app/api.py` (`create_app(deps)`), testadas com TestClient em memória (`tests/test_api.py`) e com PostgreSQL efêmero (`tests/test_pg.py::PgApi`).
 - Persistência durável: `app/pg.py` (`PostgresRepository`, `PgMemberships`, `PgCompanies`, `PgReleases`) sobre `backend/db/001_initial.sql` + `002_isolation.sql`.
-- **Não conectado:** provedor de identidade (verificador e emissão do cookie `session`), storage privado durável (só `MemoryStorage`, de teste), cofre, processo/loop do worker e adaptador fiscal oficial (bloqueado). `app.main:app` recusa iniciar enquanto faltarem.
+- Identidade: `SupabaseIdentityVerifier` verifica JWT/JWKS; `POST /v1/auth/session` cria o cookie e `DELETE /v1/auth/session` o exclui. Storage privado: `SupabaseS3Storage`. `app.main:app` monta as dependências duráveis, sem carregar certificado ou iniciar worker. Cofre, processo/loop operacional do worker e adaptador fiscal oficial continuam pendentes/bloqueados.
 - A prévia de importação no modo API vem de `POST /importacoes/analisar`; a confirmação reclassifica as linhas no servidor.
+
+
+## Entrada autenticada do frontend
+
+A superfície de entrada existente (`SourceFallback` em `AppShell`) autentica por e-mail/senha no Supabase Auth com o SDK oficial. Não cria usuários nem decide permissões. Configuração pública: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` e `VITE_NFSE_API_URL`. Somente chave `sb_publishable_` é aceita; service role, chaves secretas e credenciais S3 nunca pertencem ao frontend.
+
+Contratos já existentes, sem novas rotas ou payloads:
+
+| Método | Endpoint | Uso |
+|---|---|---|
+| POST | /v1/auth/session | `Authorization: Bearer <access_token>`; cria cookie HttpOnly/Secure/SameSite=None; resposta 204 |
+| GET | /v1/sessao | Lê usuário, papel, empresas e liberações autorizadas pelo backend; resposta 200 ou 401 |
+| DELETE | /v1/auth/session | Exclui cookie; resposta 204; ausência de confirmação não é apresentada como saída concluída |
+
+As chamadas ao serviço continuam exclusivamente em `src/lib/datasource.ts`, com `credentials: include`; mutações mantêm `X-Requested-With: nfse-imoveis`. O JWT é enviado como Bearer somente na troca de sessão. A UI não lê o cookie e não decodifica JWT para conceder autorização; usa o papel devolvido pelo backend, que preserva `app_metadata.papel` e desconsidera `user_metadata`.
+
+Tokens do provedor não são persistidos no browser nem renovados em segundo plano neste incremento. Após a troca, o SDK encerra sua sessão local; a validade do access token no cookie continua limitada por `exp`, verificado pelo backend a cada requisição. Ao expirar, exige-se novo login. O logout da aplicação exclui esse cookie; não promete revogar todos os access tokens já emitidos em outros dispositivos.
+
+401 limpa o contexto/cache e abre a entrada novamente. 403/404 usam mensagem genérica de acesso indisponível e retorno ao contexto autorizado; nenhuma resposta de erro ativa demo automaticamente. A demonstração segue explícita quando não há URL de API ou é escolhida deliberadamente após indisponibilidade. A seleção de empresa valida a lista de `/v1/sessao`; não concede membership. Preferências são separadas por usuário/modo, e caches são descartados ao trocar empresa, perder acesso ou sair.
+
+HTTPS e origens permitidas no backend são requisitos de integração real; a política do cookie não foi relaxada. Bloqueio de cookies entre sites pelo navegador pode impedir a sessão: a UI permanece sem acesso, sem recorrer a Bearer em todas as chamadas ou armazenamento inseguro. O fluxo de entrada atual não usa o redirect legado `GET /v1/auth/login`; nenhuma nova rota `/login` foi criada.
+
+Prova automatizada: `python tests/e2e/nfse_flow.py --auth`, em Linux. Usa API FastAPI e verificador JWT do produto com TLS/chaves, memberships, storage/repositório e provedor sintéticos de teste. Não comprova login numa conta Supabase hospedada nem persistência PostgreSQL nessa jornada; essa validação de ambiente continua separada.

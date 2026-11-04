@@ -33,7 +33,7 @@ class Xmlsec1(unittest.TestCase):
         for p in (SHA256, PERFIS_CRIPTO["xmldsig-rsa-sha1-c14n10-legado"]):
             r = self.run_xmlsec(Assinador(K1, C1, p).assinar(build_dps(entrada())))
             self.assertEqual(r.returncode, 0, r.stderr[-400:])
-            self.assertIn("Verification status: OK", r.stdout + r.stderr)
+            self.assertTrue({"OK", "Verification status: OK"}.intersection((r.stdout + r.stderr).splitlines()), r.stdout + r.stderr)
 
     def test_tamper_and_wrong_trust_fail(self):
         s = Assinador(K1, C1, SHA256).assinar(build_dps(entrada()))
