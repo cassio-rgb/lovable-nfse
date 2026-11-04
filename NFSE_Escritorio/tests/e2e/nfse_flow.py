@@ -60,7 +60,7 @@ async def main():
     await b.close()
 # O modo autenticado usa o mesmo contrato FastAPI e verificador JWT do produto.
 # Somente provedor, chaves, vínculos e armazenamento são fixtures locais de teste.
-async def authenticated():
+async def authenticated(accessibility=False):
     import ipaddress
     import json
     import os
@@ -165,6 +165,11 @@ async def authenticated():
                             return await route.fulfill(status=204, headers=headers)
                         raise AssertionError("Chamada inesperada ao provedor")
                     await context.route("https://auth.example.test/**", provider)
+                    if accessibility:
+                        from accessibility import check_authenticated
+                        await check_authenticated(page, context, origin, api)
+                        await browser.close()
+                        return
                     async def login(email="escritorio@example.test", password="senha-sintetica"):
                         await page.get_by_label("E-mail", exact=True).fill(email)
                         await page.get_by_label("Senha", exact=True).fill(password)
@@ -264,4 +269,7 @@ async def authenticated():
 
 if __name__ == "__main__":
     import sys
-    asyncio.run(authenticated() if "--auth" in sys.argv else main())
+    async def standard():
+        await main()
+        await authenticated(accessibility=True)
+    asyncio.run(authenticated() if "--auth" in sys.argv else standard())

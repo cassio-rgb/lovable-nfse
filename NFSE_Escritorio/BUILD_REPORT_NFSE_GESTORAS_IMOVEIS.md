@@ -10,17 +10,19 @@
 | Status | In Progress |
 | Overall | IN PROGRESS |
 | Branch | feat/supabase-infra |
-| Baseline | 81af5478a7291ec3e8baa78a4d2c5c248fed6e9e — incremento autenticado sobre o fechamento documental; histórico de CI em 0c6cf49 preservado |
+| Baseline | 460f3aa — início do incremento UX-A11Y/RESP com working tree limpo; evidências anteriores preservadas como histórico |
 | Repository | cassio-rgb/lovable-nfse; aplicação em NFSE_Escritorio/ |
-| Scope desta entrega | Integração autenticada frontend/backend, sem emissão fiscal real |
+| Scope desta entrega | Acessibilidade e responsividade frontend; evidência automatizada do item #38, sem emissão fiscal real |
 
 Fontes lidas integralmente na raiz Git (diretório pai desta aplicação): [Brainstorm](../BRAINSTORM_NFSE_GESTORAS_IMOVEIS.md), [Define](../DEFINE_NFSE_GESTORAS_IMOVEIS.md), [Governança](../GOVERNANCA_REVIEW_NFSE_GESTORAS_IMOVEIS.md), [UX Review](../UX_REVIEW_NFSE_GESTORAS_IMOVEIS.md) e [Design](../DESIGN_NFSE_GESTORAS_IMOVEIS.md). Considerados também AGENTS.md, adendo 004, relatórios históricos, código, migrations, testes, scripts e workflows reais. O DEFINE permanece Needs Clarification, o DESIGN permanece Draft e a UX Review permanece BLOCKED FOR DESIGN nos documentos originais; este relatório não modifica esses estados nem presume sua aprovação posterior.
 
 ## Mode Selection
 
-Modo sequencial/default, sem delegação. O fechamento documental anterior permanece histórico; o incremento atual autoriza apenas a integração autenticada nos paths do manifesto remapeado, seus testes e este relatório. A infraestrutura já implementada é avaliada como incremento; a completude do produto é avaliada contra todo o manifesto de 47 itens e AT-001 a AT-013. A existência de um arquivo não comprova a entrega integral de seu propósito.
+Modo sequencial/default, sem delegação. O fechamento documental anterior permanece histórico; o incremento atual autoriza acessibilidade/responsividade do frontend, testes frontend/E2E e este relatório. A integração autenticada anterior está commitada na baseline 460f3aa; suas evidências abaixo são históricas. A infraestrutura já implementada é avaliada como incremento; a completude do produto é avaliada contra todo o manifesto de 47 itens e AT-001 a AT-013. A existência de um arquivo não comprova a entrega integral de seu propósito.
 
 ## Summary
+
+Incremento UX-A11Y/RESP sobre 460f3aa: suíte Python/Playwright criada no path real de #38 e integrada ao E2E padrão existente. Teclado, foco, nomes acessíveis e fluxo sintético de leitura/preparação passaram em desktop 1280×900 e mobile 390×844 / 320×740. Receipt humano de desktop, mobile, teclado e foco registrado como PASS em 04/11/2026 na Preview demonstrativa do PR #1; leitor de tela, contraste integral e tarefa fiscal oficial continuam pendentes; não há declaração de conformidade WCAG completa.
 
 A infraestrutura deste incremento está concluída no escopo validado: Supabase Auth, PostgreSQL, RLS, Storage privado e bootstrap seguro da API, com separação dos DSNs da API e do worker. O gate local passou em Linux/Docker; o workflow verify e os checks de Vercel passaram no commit de referência. Isso não conclui o produto exigido pelo Brainstorm/Define/Design.
 
@@ -61,6 +63,16 @@ Implementado e verificado neste recorte:
 
 Limite da evidência: o E2E usa navegador Chromium e API FastAPI reais em HTTPS, SupabaseIdentityVerifier com assinatura/iss/aud/exp reais e JWKS sintético injetado. Provedor Supabase, chaves TLS/JWT, memberships e armazenamento são fixtures locais (APP_ENV=test). Não há conta Supabase hospedada nem PostgreSQL real nessa jornada. Não houve alteração de API/schema/arquitetura fora do Design, emissão fiscal, certificado A1 ou acesso ao Storage de documentos. O único certificado criado pelo teste é TLS sintético temporário.
 
+### Incremento UX-A11Y/RESP — baseline 460f3aa
+
+Modo sequencial/default, sem delegação. HEAD e working tree limpo foram conferidos antes de editar. Lidos DESIGN, DEFINE, UX_REVIEW, BUILD_REPORT e a fonte canônica ../UX_STANDARD (1).md, versão 1.0.0 Approved. A situação formal dos documentos originais não foi alterada. PR Draft e cinco checks da baseline foram informados pelo operador; não foram promovidos a nova execução de CI destas mudanças locais.
+
+Mapeamento apresentado antes das alterações: #5 → src/components/StatusPanel.tsx (Notice/StatusBadge existentes, sem alteração); #10 → src/components/AccessDenied.tsx; #11 → AppShell.tsx + CompanyContext.tsx + src/routes/; #12 → src/styles.css; #38 → tests/e2e/accessibility.py, adaptando a proposta .spec.ts à stack Python/Playwright já adotada. O teste reutiliza o bootstrap autenticado de tests/e2e/nfse_flow.py e não cria uma segunda stack. Lacunas reproduzidas no formulário (#6), nas notificações da composição (#11) e nas rotas home/histórico justificaram ajustes frontend adicionais dentro do escopo autorizado.
+
+Implementação: foco previsível em mudanças de rota/contexto e entrada/erro de sessão; skip link; erro de login associado aos campos; encaminhamento de foco ao resumo de erro e ao campo da próxima etapa do formulário; associação programática das demais instruções/erros do formulário; cancelamento do modal com o primitive acessível existente; notificações com fechamento nomeado em português e alvo mínimo de 24 px; cabeçalho, ações da home e filtro de histórico adaptados à largura móvel. Preferência de movimento reduzido contemplada no CSS, ainda sem receipt humano específico. Não houve mudança de validação de domínio ou regra fiscal.
+
+O runner padrão nfse_flow.py agora executa a jornada demo e depois a suíte #38. O comando isolado é python tests/e2e/accessibility.py; --auth preserva a regressão autenticada existente. scripts/verify.py e workflows não foram alterados. Nenhuma dependência foi adicionada.
+
 ### File Manifest do Design — 47 itens
 
 Legenda: **Implementado** significa propósito interno comprovado por código/testes disponíveis; não implica homologação fiscal. **Parcial** indica escopo ou prova ainda incompletos. **Fora deste incremento** preserva o trabalho previsto, sem removê-lo do Design. Caminhos abaixo são relativos à aplicação, salvo indicação da raiz Git.
@@ -78,7 +90,7 @@ Legenda: **Implementado** significa propósito interno comprovado por código/te
 | 9 | DocumentResult.tsx → src/routes/operacao.$id.tsx, historico.tsx | Parcial: resultado simulado e link autorizado existem; documento oficial/download integrado não demonstrados |
 | 10 | AccessDenied.tsx → src/components/AccessDenied.tsx | Implementado no escopo local: mensagem genérica e retorno; negação também testada na API |
 | 11 | NfseWorkspace.tsx → src/components/AppShell.tsx + src/routes/ | Parcial: entrada autenticada e logout integrados na superfície existente, sem nova rota; jornada hospedada e restante do produto pendentes |
-| 12 | web/src/styles/nfse.css → src/styles.css | Parcial: estilos/tokens responsivos presentes; contraste e tarefa móvel completa sem prova |
+| 12 | web/src/styles/nfse.css → src/styles.css | Parcial: skip link, foco e adaptação móvel; fluxo de leitura/preparação PASS a 390/320 px, sem overflow nas telas auditadas. Contraste integral e emissão móvel oficial pendentes |
 | 13 | backend/pyproject.toml | Implementado: dependências e descoberta de pacotes app* |
 | 14 | backend/app/config.py | Implementado: validação e DSNs segregados; ausência de configuração não vira fallback fiscal |
 | 15 | backend/app/domain/models.py | Implementado: Decimal, estados e invariantes testados |
@@ -104,7 +116,7 @@ Legenda: **Implementado** significa propósito interno comprovado por código/te
 | 35 | backend/tests/test_emissions.py + test_pg.py | Implementado para resposta perdida, crash/fence e concorrência simulados; smoke externo separado |
 | 36 | backend/tests/test_contract.py + test_interop.py | Parcial: contratos XML e assinatura offline cobertos; interpretação do HTTP oficial sem fixture validada |
 | 37 | tests/e2e/nfse.spec.ts → tests/e2e/nfse_flow.py | Parcial: jornada demo e modo --auth passaram; autenticação/JWT/cookie/isolamento/erros locais cobertos, sem provar Supabase hospedado/PG durável nem M01–M05 integrais |
-| 38 | tests/e2e/accessibility.spec.ts | Fora deste incremento: arquivo ausente; auditoria completa de teclado/foco/contraste/mobile não demonstrada |
+| 38 | tests/e2e/accessibility.spec.ts → tests/e2e/accessibility.py, reutilizando nfse_flow.py | Parcial: suíte executável de teclado, foco, nomes/descrições, estados e viewport PASS nos três tamanhos; incluída no E2E padrão. Receipt humano de desktop/mobile/teclado/foco PASS na Preview demonstrativa; leitor de tela e contraste integral pendentes |
 | 39 | scripts/verify.py | Parcial: local e postgres executáveis; restricted falha fechado e smoke oficial ainda não implementado |
 | 40 | deploy/backend.Dockerfile | Parcial: artefato existe; empacotamento/execução completos não validados; comentário referencia worker_main inexistente |
 | 41 | deploy/compose.test.yml | Parcial: define db/API, sem serviço worker e sem prova do conjunto isolado previsto; não confundir com contêiner do gate |
@@ -118,6 +130,24 @@ Legenda: **Implementado** significa propósito interno comprovado por código/te
 Itens adicionais rastreados pelos adendos: certificado/delegação A1 offline (001); lançador local em loopback (002); catálogos fiscais e campos de seleção explícita (003); Auth/Storage/runtime/bootstrap (004). Esses incrementos não eliminam as pendências do manifesto original.
 
 ## Files Changed
+
+Neste incremento UX-A11Y/RESP (árvore limpa na baseline):
+
+| Path | Alteração |
+|---|---|
+| src/components/AppShell.tsx | Foco de navegação/sessão, skip link, erro de login associado e cabeçalho móvel |
+| src/components/AccessDenied.tsx | Título genérico alcançável por foco programático |
+| src/components/CompanyContext.tsx | Foco no estado de logout e cancelamento acessível do modal de troca |
+| src/components/DraftForm.tsx | Foco nas etapas/erros e descrições associadas, sem mudar validações |
+| src/components/ui/sonner.tsx | Fechar notificação por teclado, nomes em português e alvo mínimo |
+| src/routes/index.tsx | Ações principais quebram linha em viewport estreito |
+| src/routes/historico.tsx | Filtro limitado à largura disponível |
+| src/styles.css | Skip link, foco/ajustes móveis e preferência de movimento reduzido |
+| tests/e2e/accessibility.py | Nova suíte #38 com teclado, árvore acessível e medições de viewport |
+| tests/e2e/nfse_flow.py | Reuso da fixture autenticada e inclusão de #38 no runner padrão |
+| BUILD_REPORT_NFSE_GESTORAS_IMOVEIS.md | Evidências deste incremento e checklist humano |
+
+Histórico dos incrementos anteriores:
 
 Neste recorte de correção: backend/app/api.py (ordem de contexto), backend/tests/test_api.py (regressão de autorização/contexto) e este BUILD_REPORT. As nove mudanças locais anteriores foram preservadas. Nenhum frontend de produto foi modificado nesta correção.
 
@@ -146,6 +176,28 @@ O diff de 0c6cf49 mostra alterações de finais de linha; não representa autori
 ## Verification Results
 
 Evidências históricas são registradas com origem, sem apresentá-las como reexecução em 04/11. Isso descreve o fechamento documental anterior. O incremento autenticado executou os checks locais abaixo; não executou novo GitHub Actions nem deploy.
+
+### Acessibilidade e responsividade — 2026-11-04
+
+**Fechamento automático executado:** python scripts/verify.py --mode local, no Linux/Docker nfse-verify-20261103, terminou com exit 0: 145 testes Python, 23 Vitest, typecheck, build e E2E padrão PASS. O próprio E2E padrão executou #38 em 1280×900, 390×844 e 320×740, todos PASS. A regressão adicional python tests/e2e/nfse_flow.py --auth passou, incluindo expiração, 401/403, revogação e falha/recuperação de logout. Log local ignorado: .nfse-local/verify/a11y-gate.log. Não houve execução de GitHub Actions destas mudanças não commitadas.
+
+**Provas focadas executadas:** python tests/e2e/accessibility.py PASS em 1280×900, 390×844 e 320×740; bunx tsc --noEmit PASS; bunx vitest run PASS (23 testes / 6 arquivos). ESLint de código dos componentes/rotas então alterados: zero erros e um warning preexistente react-refresh/only-export-components em CompanyContext. Regra de formatação prettier/prettier excluída desse check focado para não reformatar arquivos preexistentes inteiros; isso não substitui lint/format integral.
+
+| Critério / referência | Evidência automatizada real | Limite |
+|---|---|---|
+| UX-A11Y-002 — teclado | Login com Tab/Enter e digitação, ordem e-mail → senha; seletor com Enter/End/Home/Escape; skip link; navegação, formulário, modal, fechar notificação e logout | Automação Chromium; receipt humano de teclado PASS na Preview demonstrativa em 04/11/2026. Dispositivo/navegador humanos não informados |
+| UX-A11Y-003 — foco | Títulos de recuperação/login focados, erro de login e resumo de validação alcançados, foco no próximo campo/rota, modal cancelável e retorno ao seletor; nenhum ciclo impeditivo no percurso testado | Verificação de :focus-visible e outline/box-shadow nos controles-alvo; percepção e oclusão visual em todos os estados exigem revisão humana |
+| UX-A11Y-004 — labels | Árvore acessível CDP sem controles sem nome nas telas auditadas; labels de login/formulário/seletor/filtros; referências aria-describedby resolvidas | Não equivale a teste com leitor de tela nem varredura de todas as telas |
+| UX-STATE/CORE-010 — estados | Loading de sessão controlado, 503 e retry, credencial inválida, vazio, negação genérica, erro de campo, rascunho salvo não emitido, logout/401 | Fontes e dados sintéticos; expiração/revogação também pertencem à regressão --auth existente |
+| UX-A11Y-006 — além da cor | Mensagens de erro/sucesso e status de rascunho verificados por texto; alert/status e ícones existentes preservados | Não prova todos os estados fiscais oficiais |
+| UX-RESP-003/004/005 | Login, contexto/empresa ativa, histórico, leitura protegida, reload, formulário e modal operáveis nos três viewports; scrollWidth medido sem overflow horizontal indevido nas telas auditadas | Não demonstra emissão real, todas as tabelas/estados nem comportamento em Safari/Android/iOS |
+| UX-A11Y-005 — contraste | NAO AVALIAVEL para conformidade integral neste incremento; não foi executado analisador completo de contraste | Receipt e medições aplicáveis pendentes |
+
+axe-core e @axe-core/playwright não estavam instalados; nenhuma dependência foi adicionada. A automação utiliza Playwright/Chromium e Accessibility.getFullAXTree para verificações limitadas de nomes, foco, referências e geometria, sem apresentar isso como auditoria axe/WCAG integral. Capturas sintéticas de 1280 e 390 px foram inspecionadas, sem dados hospedados, credenciais ou tokens visíveis; artefatos ficam em /tmp/browser/accessibility no contêiner e cópias locais ignoradas em .nfse-local/verify/a11y-screens.
+
+Falhas reproduzidas antes das correções: título de recuperação sem foco; validação de etapa mantendo foco no botão; modal sem destino inicial de foco por ausência do AlertDialogCancel; ciclo de Tab entre toast e controle anterior, resolvido por fechamento explícito; overflow do botão de recuperação, ações da home e filtro de histórico a 320 px (filtro medido em 309 px). Ajustes do roteiro aguardaram o listbox aberto e usaram o estado genérico real de negação, sem inventar contrato. O teste de overflow continua falhando pela largura do documento, mesmo quando o diagnóstico não identifica o elemento ofensivo.
+
+Não foram acessadas credenciais locais ou serviços hospedados nesta rodada. API de teste em memória/TLS sintético; nenhuma mudança em backend, Auth, RLS, banco, migrations, Storage, XSDs, hashes, MANIFEST ou configuração secreta. A suíte #38 não chama emissão/verificação fiscal; NationalNfseClient.submit/lookup e produção continuam bloqueados.
 
 ### Correção pontual do contexto RLS em allow() — 2026-11-04
 
@@ -316,6 +368,8 @@ Histórico anterior, preservado:
 
 ## Verify Gate
 
+Incremento UX-A11Y/RESP sobre 460f3aa: **PASS, exit 0**, com 145 Python, 23 Vitest, typecheck, build e E2E demo + #38 nos três viewports. --auth adicional também PASS. scripts/verify.py permanece inalterado; nfse_flow.py inclui a nova suíte no caminho já chamado pelo gate.
+
 **Evidências canônicas do gate de software local: Linux/Docker e GitHub Actions.** Windows/Bash sem ambiente compatível não é usado como diagnóstico de falha funcional.
 
 Comando real: `python scripts/verify.py --mode local`. Exige Python/dependências, Bun/bunx, Bash para os testes de guardas, xmlsec1 independente e servidor em localhost:8080 com Playwright/Chromium. Cada FAIL ou NOT RUN provoca exit 1. Nenhuma exigência foi removida para obter aprovação.
@@ -325,6 +379,8 @@ No Docker foi usada a imagem nfse-verify-local:20261103, com Bun 1.4.4 e xmlsec1
 Resultado local: **PASS, exit 0**. Resultado do aceite fiscal global: **PENDENTE**. O DEFINE original define kind: smoke, ainda com comando a esclarecer; o DESIGN exige smoke oficial restrito. `python scripts/verify.py --mode restricted` permanece fail-closed, sem simulador como substituto. CI verde não encerra AT-007/009/010/011/013 oficiais.
 
 ## Complementary Checks
+
+Incremento UX-A11Y/RESP: revisão do diff confirmou somente frontend, testes E2E e este relatório; nenhuma alteração em backend, supabase, dependências/lockfile, configuração, XSD/hash/MANIFEST ou cliente fiscal. Validação estrutural do relatório e git diff --check executados no fechamento.
 
 Incremento autenticado: git diff --check executado com PASS; package-lock.json ausente; diff vazio em backend/app, backend/db, supabase e .gitattributes. Revisão React aplicada a hooks, campos rotulados, estados anunciados e cache. SDK importado somente ao entrar. Estrutura do relatório e status Git serão conferidos no fechamento.
 
@@ -336,6 +392,34 @@ Incremento autenticado: git diff --check executado com PASS; package-lock.json a
 - `git diff --check` executado no fechamento: PASS (exit 0). Como o relatório é novo/untracked, também foi verificado diretamente quanto a espaços finais e newline final.
 - `git status --short` executado no fechamento para comprovar alteração documental isolada.
 - Não foram repetidos testes de produto nem executados modes postgres/restricted nesta etapa documental.
+
+### Receipt humano de UX — 04/11/2026
+
+Receipt informado pelo operador e registrado documentalmente nesta etapa; não constitui nova execução automática nem auditoria independente.
+
+| Campo | Registro |
+|---|---|
+| Responsável humano | Operador do projeto |
+| Data | 04/11/2026 |
+| Local da validação | Preview do Vercel do PR #1 |
+| Ambiente | Demonstrativo, sem emissão fiscal |
+| Desktop | PASS — APROVADO |
+| Mobile | PASS — APROVADO |
+| Teclado | PASS — APROVADO |
+| Foco | PASS — APROVADO |
+
+**Limitações:** não foi validado login real nessa Preview. Login/logout reais possuem evidência técnica separada no ambiente autenticado/hospedado, preservada nas seções anteriores; essa evidência não é parte deste receipt humano. Leitor de tela e medição integral de contraste não foram executados e permanecem fora do receipt. Não foram informados navegador/SO, dispositivo, dimensões, zoom ou URL exata da Preview; não se presume cobertura desses detalhes.
+
+Não se declara conformidade WCAG 2.2 AA completa. O receipt aprova os quatro aspectos acima no ambiente demonstrativo; não aprova emissão fiscal nem encerra automaticamente toda a UX_REVIEW ou o Build do produto.
+
+### Verificações UX complementares — sem receipt neste registro
+
+- [ ] Leitor de tela: validar nomes, descrições, instruções e erros com NVDA ou equivalente.
+- [ ] Anúncios: validar a leitura de loading, erro/retry, acesso negado, sessão expirada, vazio e sucesso, sem repetição confusa.
+- [ ] Contraste integral: medir texto, controles, foco e estados contra os critérios aplicáveis da WCAG 2.2 AA.
+- [ ] Detalhamento adicional, quando necessário: registrar navegador/dispositivo e provas específicas de zoom, orientação, toque e teclado virtual, sem presumir execução a partir da aprovação geral.
+
+Nesta etapa somente o BUILD_REPORT foi atualizado; código e mudanças locais anteriores foram preservados. Nenhum commit, push, merge ou alteração de PR foi realizado.
 
 ## Acceptance Test Verification
 
@@ -360,6 +444,8 @@ Incremento autenticado: git diff --check executado com PASS; package-lock.json a
 M01 possui recuperação simulada; M02 possui prévia/idempotência; M03 possui guarda de troca; M04 possui elegibilidade; M05 possui negação genérica. Isso constitui implementação parcial das soluções propostas, sem fechamento formal da UX Review. Faltam cobertura integral dos cenários de falha, incorporação autorizada ao DEFINE e reaplicação da revisão. Acessibilidade, contraste, teclado, leitor de tela e emissão simples no celular continuam sem prova completa; não se declara WCAG atendida.
 
 ## Advisor Ledger
+
+Incremento UX-A11Y/RESP: aplicada a skill React Best Practices à composição, dependências dos efeitos, limpeza de requestAnimationFrame, hooks e semântica. Sem delegação ou auditoria externa na execução automática; receipt humano posterior do operador registrado em 04/11/2026 para desktop, mobile, teclado e foco na Preview demonstrativa.
 
 No incremento autenticado foram usadas as skills Supabase e React Best Practices para SDK/segurança e revisão dos componentes; nenhuma revisão externa ou delegação foi executada. Consultados [signInWithPassword](https://supabase.com/docs/reference/javascript/auth-signinwithpassword), [signOut](https://supabase.com/docs/reference/javascript/auth-signout) e changelog oficial antes da implementação. TLS moderno exigido; mudanças de SAML/self-hosted não alteram o login por senha hospedado deste recorte.
 
@@ -402,7 +488,7 @@ A1 não vai ao frontend nem ao Storage comum. Certificado de escritório não su
 | Parâmetros fiscais por contexto | Impede liberar operações reais | Cadastro durável e validação por responsável fiscal |
 | Contrato HTTP e perfil cripto oficial | Mantém submit/lookup bloqueados | Spike documentado com contrato vigente e testes de interpretação |
 | Pilotos Bariri/Pederneiras | Impede fechar ATs smoke e liberar produção | Habilitação e recibos/retornos oficiais de ambos os contextos |
-| Acessibilidade e completude do manifesto | Impede declarar todo o Build completo | Suíte/provas de tarefa e fechamento das lacunas itemizadas |
+| Acessibilidade e completude do manifesto | Automação #38 e receipt humano de desktop/mobile/teclado/foco PASS; contraste integral, leitor de tela e partes do manifesto ainda pendentes | Executar as verificações complementares e fechar lacunas sem presumir WCAG completa |
 | Governança e alinhamento documental | Impede fechamento formal integral | Decisões individuais, responsável/CRC, guarda, recuperação e atualização autorizada de critérios |
 | Bun Windows | Limita ambiente nativo | Diagnóstico da recusa de links; Linux/Docker segue alternativa validada |
 
@@ -417,3 +503,5 @@ Overall: IN PROGRESS
 Infraestrutura deste incremento: concluída e validada no escopo descrito. Gate local Linux/Docker e CI no commit 0c6cf49: PASS. Produto completo do DEFINE/DESIGN: não concluído; manifesto e ATs oficiais ainda possuem pendências.
 
 Incremento autenticado: implementação e gate local PASS; Auth, API, PostgreSQL durável e leitura protegida hospedados PASS após correção de allow(). Frontend hospedado de leitura, reload e logout PASS. Isolamento hospedado com segunda empresa permanece INCONCLUSIVE por ausência de fixture segura. O incremento está pronto para revisão e commit somente mediante autorização, com essa limitação explícita. Próxima ação segura: revisar o diff e obter autorização de commit, sem emissão fiscal. O restante do manifesto e dos ATs continua pendente. Manter o adaptador fiscal e produção bloqueados até cofre, contrato/perfil aprovado, parâmetros e smoke oficial. Nenhum commit, push, merge, promoção do PR para Ready for review ou publicação foi realizado nesta etapa.
+
+Incremento UX-A11Y/RESP: testes focados, Verify Gate completo e suíte nos três viewports PASS; diff revisado. O incremento de acessibilidade/responsividade está pronto para commit autorizado no seu recorte: automação PASS e receipt humano do operador em 04/11/2026 PASS para desktop, mobile, teclado e foco na Preview demonstrativa do PR #1. Leitor de tela e contraste integral permanecem explicitamente pendentes e não se declara WCAG completa; login real não foi validado nessa Preview, tendo evidência técnica separada no ambiente autenticado/hospedado. Item #38 permanece Parcial para aceite integral; o Build geral continua IN PROGRESS. Nenhum commit, push, merge, promoção do PR ou publicação foi realizado neste incremento.

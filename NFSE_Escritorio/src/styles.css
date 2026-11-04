@@ -138,6 +138,29 @@
   body { font-family: var(--font-sans); font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
   h1, h2, h3 { letter-spacing: -0.01em; }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  .skip-link {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    padding: 0.75rem 1rem;
+    background: var(--card);
+    color: var(--foreground);
+    transform: translateY(-200%);
+  }
+  .skip-link:focus { transform: translateY(0); }
+  @media (max-width: 639px) {
+    button, a { overflow-wrap: anywhere; }
+    button { white-space: normal; height: auto; min-height: 2.5rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @utility surface {

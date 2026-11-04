@@ -11,6 +11,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertDialog,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -69,6 +70,10 @@ export function CompanyProvider({
   const [acesso, setAcesso] = useState<FonteStatus | null>(null);
   const [encerrando, setEncerrando] = useState(false);
   const [erroSaida, setErroSaida] = useState(false);
+  const logoutStatus = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (encerrando) logoutStatus.current?.focus();
+  }, [encerrando, erroSaida]);
   const qc = useQueryClient();
   const [sessaoPronta, setSessaoPronta] = useState<Sessao | null>(null);
   const limpar = useCallback(() => {
@@ -197,7 +202,7 @@ export function CompanyProvider({
 
   if (encerrando)
     return (
-      <div className="mx-auto max-w-md p-8" role={erroSaida ? "alert" : "status"}>
+      <div ref={logoutStatus} tabIndex={-1} className="mx-auto max-w-md p-8" role={erroSaida ? "alert" : "status"}>
         <p>
           {erroSaida
             ? "Não foi possível encerrar a sessão. Tente novamente para confirmar a saída."
@@ -255,9 +260,9 @@ export function CompanyProvider({
             </p>
           )}
           <AlertDialogFooter className="flex-wrap gap-2 sm:gap-2">
-            <Button variant="ghost" disabled={salvando} onClick={() => setPendente(null)}>
-              Permanecer
-            </Button>
+            <AlertDialogCancel asChild>
+              <Button variant="ghost" disabled={salvando}>Permanecer</Button>
+            </AlertDialogCancel>
             <Button
               variant="outline"
               disabled={salvando}
