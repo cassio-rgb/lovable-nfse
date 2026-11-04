@@ -288,7 +288,7 @@ export function createDemoSource(): DataSource {
 
 /* ================= Modo API (serviço fiscal Python separado) ================= */
 
-export function createApiSource(base: string): DataSource {
+export function createApiSource(base: string, onAccessDenied?: (status: number) => void): DataSource {
   const url = (p: string) => `${base.replace(/\/$/, "")}${p}`;
   async function call<T>(path: string, init?: RequestInit, opts?: { incerto?: boolean }): Promise<T> {
     let res: Response;
@@ -309,8 +309,11 @@ export function createApiSource(base: string): DataSource {
       throw e;
     }
     if (opts?.incerto && res.status >= 500) throw new ResultadoIncerto();
-    if (res.status === 401) throw new NaoAutenticado();
-    if (res.status === 403 || res.status === 404) throw new AcessoNegado();
+    if (res.status === 401 || res.status === 403 || res.status === 404) {
+      onAccessDenied?.(res.status);
+      if (res.status === 401) throw new NaoAutenticado();
+      throw new AcessoNegado();
+    }
     if (res.status === 409) throw new ConflitoVersao();
     const body = await res.json().catch(() => ({}));
     if (res.status === 422 || res.status === 423) throw new Bloqueio(body?.detail?.mensagem ?? "Ação bloqueada.");
@@ -380,3 +383,55 @@ export function previaDaApi(r: ApiPrevia): Previa {
 
 export const API_URL: string = (import.meta.env["VITE_NFSE_API_URL"] as string | undefined) ?? "";
 export const loginUrl = () => `${API_URL.replace(/\/$/, "")}/v1/auth/login?retorno=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`;
+
+// Supabase autentica; somente /v1/sessao define usuário, papel e memberships da UI.
+// O SDK mantém tokens somente em memória. Não há sessão fiscal em localStorage.
+let browserIdentity: import("@supabase/supabase-js").SupabaseClient | undefined;
+async function identityClient() {
+  if (browserIdentity) return browserIdentity;
+  const endpoint = (import.meta.env["VITE_SUPABASE_URL"] as string | undefined) ?? "";
+  const publicKey = (import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string | undefined) ?? "";
+  if (!endpoint.startsWith("https://") || !publicKey.startsWith("sb_publishable_")) {
+    throw new Error("O acesso ainda não está configurado. Solicite a configuração ao responsável.");
+  }
+  const { createClient } = await import("@supabase/supabase-js");
+  browserIdentity = createClient(endpoint, publicKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  return browserIdentity;
+}
+
+async function sessionCommand(method: "POST" | "DELETE", token?: string): Promise<void> {
+  if (!API_URL) throw new Error("Serviço de sessão não configurado.");
+  const res = await fetch(`${API_URL.replace(/\/$/, "")}/v1/auth/session`, {
+    method,
+    credentials: "include",
+    signal: AbortSignal.timeout(20000),
+    headers: {
+      "X-Requested-With": "nfse-imoveis",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  if (res.status === 401) throw new NaoAutenticado();
+  if (res.status === 403) throw new AcessoNegado();
+  if (!res.ok) throw new Error("Não foi possível atualizar a sessão. Tente novamente.");
+}
+
+export async function entrar(email: string, password: string): Promise<void> {
+  const client = await identityClient();
+  const { data, error } = await client.auth.signInWithPassword({ email, password });
+  if (error || !data.session)
+    throw new Error("Não foi possível entrar. Confira seu e-mail e senha.");
+  try {
+    await sessionCommand("POST", data.session.access_token);
+  } finally {
+    // Remove credenciais da memória do SDK sem revogar a sessão fiscal recém-criada.
+    // O cookie expira logicamente com exp do JWT; depois disso, é exigido novo login.
+    await client.auth.signOut({ scope: "local" });
+  }
+}
+
+export async function sair(): Promise<void> {
+  // A UI só confirma saída depois da exclusão do cookie HttpOnly pelo backend.
+  await sessionCommand("DELETE");
+}

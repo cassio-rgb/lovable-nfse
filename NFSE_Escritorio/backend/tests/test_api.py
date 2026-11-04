@@ -13,7 +13,7 @@ from app.config import ConfigError
 from app.documents import MemoryStorage
 from app.domain.models import Outcome
 from app.eligibility import Release, ReleaseRegistry
-from app.repository import MemoryRepository
+from app.repository import MemoryRepository, current_user_id
 from tests.helpers import FakeAdapter, dados as dados_fixture
 
 ORIGIN = "https://app.exemplo.test"
@@ -68,6 +68,39 @@ def emitir(client, d, key="emissao:A:chave-estavel-1", ambiente="producao_restri
     return client.post(f"/v1/empresas/A/rascunhos/{d['id']}/emissao",
                        json={"revisao_id": d["revisao"]["id"], "versao": d["versao"], "ambiente": ambiente, "confirmacao_humana": True},
                        headers={**H, "Idempotency-Key": key})
+
+
+class RlsAuthorization(unittest.TestCase):
+    def test_membership_receives_verified_identity_before_query(self):
+        client, deps = build()
+        original = deps.members.require
+
+        def require(principal, empresa, permission):
+            self.assertEqual(current_user_id.get(), principal.user_id)
+            return original(principal, empresa, permission)
+
+        deps.members.require = require
+        marker = current_user_id.set("caller-context")
+        try:
+            for token, company, status in [
+                ("tok-u1", "A", 200), ("tok-u1", "B", 404),
+                ("tok-u2", "B", 200), ("tok-u2", "A", 404),
+                ("tok-u1", "A", 200),
+            ]:
+                client.cookies.clear()
+                self.assertEqual(client.post("/v1/auth/session", headers={
+                    **H, "Authorization": f"Bearer {token}",
+                }).status_code, 204)
+                self.assertEqual(client.get(f"/v1/empresas/{company}/rascunhos").status_code, status)
+                self.assertEqual(current_user_id.get(), "caller-context")
+            deps.members.revoke("u1", "A")
+            self.assertEqual(client.get("/v1/empresas/A/rascunhos").status_code, 404)
+            self.assertEqual(client.delete("/v1/auth/session", headers=H).status_code, 204)
+            self.assertEqual(client.get("/v1/empresas/A/rascunhos").status_code, 401)
+            self.assertEqual(current_user_id.get(), "caller-context")
+        finally:
+            current_user_id.reset(marker)
+            client.close()
 
 
 class Startup(unittest.TestCase):

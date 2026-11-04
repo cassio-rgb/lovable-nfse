@@ -219,8 +219,8 @@ def create_app(d: Deps) -> FastAPI:
 
     def allow(request: Request, empresa_id: str, perm: str) -> Principal:
         p = principal(request)
-        members.require(p, empresa_id, perm)  # revalidado a cada requisição
         current_user_id.set(p.user_id)  # RLS no PostgreSQL
+        members.require(p, empresa_id, perm)  # revalidado a cada requisição
         return p
 
     @app.exception_handler(AcessoNegado)
